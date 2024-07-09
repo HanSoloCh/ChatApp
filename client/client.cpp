@@ -69,7 +69,7 @@ void Client::slotReadyRead()
 
 void Client::slotSendToServer(const QString &nickname, const QString &str)
 {
-    const int maxPacketSize = 10;
+    const int maxPacketSize = 512;
     int totalParts = (str.size() + maxPacketSize - 1) / maxPacketSize;
     int messageId = currentMessageId++;
 
