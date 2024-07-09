@@ -3,6 +3,9 @@
 
 #include <QObject>
 #include <QUdpSocket>
+#include <QMap>
+
+#include "message.h"
 
 class Client : public QObject
 {
@@ -10,19 +13,24 @@ class Client : public QObject
 
 public:
     Client(quint16 curPort, QObject *parent = nullptr);
-    ~Client() = default;
+    ~Client();
 
 private:
     QUdpSocket *socket;
-    QByteArray data;
     quint16 port;
+    QMap<qint32, QMap<quint32, QString>> messageParts;
+    int currentMessageId;
+
+    void processIncomingMessage(const Message &message);
+    QString makeCompleteMessage(qint32 messageId, qint32 totalParts);
+    void sendByteArray(const Message &message);
 
 signals:
-    void showMessage(const QString &message, const QString &nickname);
+    void showMessage(const QString &nickname, const QString &message);
 
 public slots:
-    virtual void slotReadyRead();
-    virtual void slotSendToServer(const QString &str, const QString &nickname);
+    void slotReadyRead();
+    void slotSendToServer(const QString &nickname, const QString &message);
 };
 
 

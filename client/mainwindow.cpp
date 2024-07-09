@@ -30,7 +30,7 @@ QString MainWindow::getNickname()
 }
 
 
-void MainWindow::slotShowMessage(const QString &message, const QString &nickname)
+void MainWindow::slotShowMessage(const QString &nickname, const QString &message)
 {
     ui->textBrowser->append(QString("%1: %2").arg(nickname, message));
 }
@@ -38,7 +38,9 @@ void MainWindow::slotShowMessage(const QString &message, const QString &nickname
 
 void MainWindow::slotSendMessage()
 {
-    emit sendToServer(ui->messageEdit->text(), getNickname());
+    QString text = ui->messageEdit->text();
+    slotShowMessage(QString("Me"), text);
+    emit sendToServer(getNickname(), text);
     ui->messageEdit->clear();
 }
 

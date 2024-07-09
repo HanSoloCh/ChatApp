@@ -5,6 +5,8 @@
 #include <QSet>
 #include <QPair>
 
+#include "message.h"
+
 class Server : public QObject
 {
     Q_OBJECT
@@ -19,7 +21,9 @@ private:
     quint16 port;
     QSet<QPair<QHostAddress, quint16>> clients;
 
-    void sendToClients(const QString &str, const QString &nickname);
+    void processIncomingMessage(const Message &message, const QHostAddress &sender, quint16 senderPort);
+
+    void sendToClients(const Message &message, const QHostAddress &sender, quint16 senderPort);
 
 public slots:
     void slotReadyRead();

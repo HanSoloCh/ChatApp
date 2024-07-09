@@ -27,10 +27,10 @@ private:
     Client *client;
 
 signals:
-    void sendToServer(const QString &message, const QString &nickname);
+    void sendToServer(const QString &nickname, const QString &message);
 
 private slots:
-    void slotShowMessage(const QString &message, const QString &nickname);
+    void slotShowMessage(const QString &nickname, const QString &message);
     void slotSendMessage();
 
 };
