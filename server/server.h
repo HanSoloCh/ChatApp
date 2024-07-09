@@ -17,7 +17,6 @@ public:
 
 private:
     QUdpSocket *socket;
-    QByteArray data;
     quint16 port;
     QSet<QPair<QHostAddress, quint16>> clients;
 

@@ -13,12 +13,15 @@ enum MessageType
 
 struct Message
 {
-    MessageType type;
-    qint32 messageId;
-    qint32 partIndex;
-    qint32 totalPartsCount;
-    QString nickname;
-    QString text;
+    struct MessageHeader
+    {
+        MessageType type;
+        qint32 messageId;
+        qint32 partIndex;
+        qint32 totalPartsCount;
+
+    } header;
+    QByteArray data;
 };
 
 QDataStream &operator<<(QDataStream &out, const Message &message);

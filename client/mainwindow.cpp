@@ -13,6 +13,10 @@ MainWindow::MainWindow(QWidget *parent)
     client = new Client(2323, this);
     connect(client, &Client::showMessage, this, &MainWindow::slotShowMessage);
     connect(this, &MainWindow::sendToServer, client, &Client::slotSendToServer);
+
+    sendTimer = new QTimer(this);
+    connect(sendTimer, &QTimer::timeout, client, &Client::slotSendPackage);
+    sendTimer->start(0);
 }
 
 MainWindow::~MainWindow()
@@ -40,7 +44,13 @@ void MainWindow::slotSendMessage()
 {
     QString text = ui->messageEdit->text();
     slotShowMessage(QString("Me"), text);
-    emit sendToServer(getNickname(), text);
+    emit sendToServer(getNickname(), text, ui->spinBox->value());
     ui->messageEdit->clear();
+}
+
+
+void MainWindow::on_spinBox_2_valueChanged(int arg1)
+{
+    sendTimer->start(arg1 * 1000);
 }
 

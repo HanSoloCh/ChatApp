@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>368</width>
-    <height>416</height>
+    <width>432</width>
+    <height>498</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,6 +15,16 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
+    <item row="4" column="3">
+     <widget class="QPushButton" name="sendButton">
+      <property name="text">
+       <string>send</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1" colspan="3">
+     <widget class="QLineEdit" name="nicknameEdit"/>
+    </item>
     <item row="0" column="0">
      <widget class="QLabel" name="niacknameLabel">
       <property name="text">
@@ -22,21 +32,41 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1" colspan="2">
-     <widget class="QLineEdit" name="nicknameEdit"/>
-    </item>
-    <item row="1" column="0" colspan="3">
+    <item row="1" column="0" colspan="4">
      <widget class="QTextBrowser" name="textBrowser"/>
     </item>
-    <item row="2" column="0" colspan="2">
-     <widget class="QLineEdit" name="messageEdit"/>
-    </item>
-    <item row="2" column="2">
-     <widget class="QPushButton" name="sendButton">
-      <property name="text">
-       <string>send</string>
+    <item row="3" column="3">
+     <widget class="QSpinBox" name="spinBox">
+      <property name="minimum">
+       <number>20</number>
+      </property>
+      <property name="maximum">
+       <number>512</number>
+      </property>
+      <property name="value">
+       <number>512</number>
       </property>
      </widget>
+    </item>
+    <item row="3" column="2">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Размер пакета</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0" colspan="3">
+     <widget class="QLineEdit" name="messageEdit"/>
+    </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Частота отправки</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QSpinBox" name="spinBox_2"/>
     </item>
    </layout>
   </widget>
@@ -45,7 +75,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>368</width>
+     <width>432</width>
      <height>22</height>
     </rect>
    </property>

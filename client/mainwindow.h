@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QUdpSocket>
+#include <QTimer>
 
 #include "client.h"
 
@@ -25,14 +26,16 @@ public:
 private:
     Ui::MainWindow *ui;
     Client *client;
+    QTimer *sendTimer;
 
 signals:
-    void sendToServer(const QString &nickname, const QString &message);
+    void sendToServer(const QString &nickname, const QString &message, int maxSize = 512);
 
 private slots:
     void slotShowMessage(const QString &nickname, const QString &message);
     void slotSendMessage();
 
+    void on_spinBox_2_valueChanged(int arg1);
 };
 
 #endif // MAINWINDOW_H

@@ -19,12 +19,12 @@ Server::Server()
 
 void Server::processIncomingMessage(const Message &message, const QHostAddress &sender, quint16 senderPort)
 {
-    if (message.type == UserConnected)
+    if (message.header.type == UserConnected)
     {
         clients.insert(qMakePair(sender, senderPort));
         qDebug() << "New user connected" << sender << senderPort;
     }
-    else if (message.type == UserDisconnected)
+    else if (message.header.type == UserDisconnected)
     {
         clients.remove(qMakePair(sender, senderPort));
         qDebug() << "User disconnected" << sender << senderPort;
@@ -32,7 +32,7 @@ void Server::processIncomingMessage(const Message &message, const QHostAddress &
     }
     else
     {
-        qDebug() << "Received message part:" << message.partIndex << "of" << message.totalPartsCount << "from" << message.nickname;
+        qDebug() << "Received message part:" << message.header.partIndex + 1 << "of" << message.header.totalPartsCount << "whith ID" << message.header.messageId;
         sendToClients(message, sender, senderPort);
     }
 }
@@ -58,7 +58,7 @@ void Server::slotReadyRead()
 
 void Server::sendToClients(const Message &message, const QHostAddress &sender, quint16 senderPort)
 {
-    data.clear();
+    QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
     out << message;
     for (const auto &client : qAsConst(clients))
