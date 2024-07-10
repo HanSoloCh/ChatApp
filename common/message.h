@@ -9,6 +9,7 @@ enum MessageType
     UserConnected,
     UserDisconnected,
     UserMessage,
+    UserFile,
 };
 
 struct Message

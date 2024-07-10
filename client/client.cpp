@@ -1,6 +1,8 @@
 #include "client.h"
 
 #include <QDataStream>
+#include <QFileInfo>
+#include <QDir>
 
 #include "message.h"
 
@@ -29,29 +31,49 @@ Client::~Client()
 
 void Client::processIncomingMessage(const Message::MessageHeader &info, const QByteArray &data)
 {
-    if (info.type == UserMessage)
+    if (info.type == UserMessage || info.type == UserFile)
     {
+
         messageParts[info.messageId][info.partIndex] = data;
         if (messageParts[info.messageId].size() == info.totalPartsCount)
         {
-            makeCompleteMessage(info.messageId, info.totalPartsCount);
+            makeCompleteMessage(info.messageId, info.totalPartsCount, info.type);
             messageParts.remove(info.messageId);
         }
     }
 }
 
-void Client::makeCompleteMessage(qint32 messageId, qint32 totalParts)
+void Client::makeCompleteMessage(qint32 messageId, qint32 totalParts, MessageType type)
 {
     QByteArray fullMessage;
+    QDataStream in(&fullMessage, QIODevice::ReadOnly);
+    QString nickname;
+
     for (qint32 i = 0; i < totalParts; ++i)
     {
         fullMessage.append(messageParts[messageId][i]);
     }
-    QDataStream in(&fullMessage, QIODevice::ReadOnly);
-    QString nickname, text;
-    in >> nickname >> text;
-    emit showMessage(nickname, text);
 
+    if (type == UserMessage)
+    {
+        QString text;
+        in >> nickname >> text;
+        emit showMessage(nickname, text);
+    }
+    else
+    {
+        QString fileName;
+        in >> nickname >> fileName;
+        QFile file(QDir::temp().filePath(fileName));
+        if (file.open(QIODevice::WriteOnly))
+        {
+            QByteArray fileData;
+            in >> fileData;
+            file.write(fileData);
+            file.close();
+            emit showFile(nickname, file.fileName());
+        }
+    }
 }
 
 void Client::slotReadyRead()
@@ -67,11 +89,12 @@ void Client::slotReadyRead()
         QDataStream in(&buffer, QIODevice::ReadOnly);
         Message message;
         in >> message;
+
         processIncomingMessage(message.header, message.data);
     }
 }
 
-void Client::slotSendToServer(const QString &nickname, const QString &str, int maxSize)
+void Client::slotSendMessageToServer(const QString &nickname, const QString &str, int maxSize)
 {
     const int maxPacketSize = maxSize - sizeof(Message::MessageHeader) - 1;
     QByteArray data;
@@ -93,13 +116,53 @@ void Client::slotSendToServer(const QString &nickname, const QString &str, int m
     }
 }
 
+void Client::slotSendFileToServer(const QString &nickname, QFile &file, int maxSize)
+{
+    const int maxPacketSize = maxSize - sizeof(Message::MessageHeader) - 1;
+
+    QByteArray headerData;
+    QDataStream out(&headerData, QIODevice::WriteOnly);
+    out << nickname << QFileInfo(file).fileName();
+
+    int totalParts = (headerData.size() + file.size() + maxPacketSize - 1) / maxPacketSize;
+    int messageId = currentMessageId++;
+    int totalHeaderParts = (headerData.size() + maxPacketSize - 1) / maxPacketSize;
+    qDebug() << totalParts << totalHeaderParts;
+
+    for (int partIndex = 0; partIndex < totalParts; ++partIndex) {
+        Message message;
+        message.header.type = UserFile;
+        message.header.messageId = messageId;
+        message.header.partIndex = partIndex;
+        message.header.totalPartsCount = totalParts;
+
+        if (partIndex < totalHeaderParts - 1) {
+            qDebug() << "l";
+            message.data = headerData.mid(partIndex * maxPacketSize, maxPacketSize);
+        } else if (partIndex == totalHeaderParts - 1) {
+            qDebug() << "e";
+            message.data = headerData.mid(partIndex * maxPacketSize, maxPacketSize);
+            qDebug() << message.data.size();
+            message.data += file.read(maxPacketSize - message.data.size());
+            qDebug() << message.data.size();
+
+        } else {
+            qDebug() << "q";
+            message.data = file.read(maxPacketSize);
+        }
+
+        sendQueue.enqueue(message);
+    }
+
+    file.close();
+}
+
 void Client::sendByteArray(const Message &message)
 {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
     out << message;
     socket->writeDatagram(data, QHostAddress::Broadcast, port);
-
 }
 
 void Client::slotSendPackage()

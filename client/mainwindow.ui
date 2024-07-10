@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>432</width>
-    <height>498</height>
+    <width>388</width>
+    <height>489</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,16 +15,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="4" column="3">
-     <widget class="QPushButton" name="sendButton">
-      <property name="text">
-       <string>send</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1" colspan="3">
-     <widget class="QLineEdit" name="nicknameEdit"/>
-    </item>
     <item row="0" column="0">
      <widget class="QLabel" name="niacknameLabel">
       <property name="text">
@@ -32,10 +22,7 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="0" colspan="4">
-     <widget class="QTextBrowser" name="textBrowser"/>
-    </item>
-    <item row="3" column="3">
+    <item row="3" column="4">
      <widget class="QSpinBox" name="spinBox">
       <property name="minimum">
        <number>20</number>
@@ -48,15 +35,26 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="2">
+    <item row="4" column="4">
+     <widget class="QPushButton" name="sendButton">
+      <property name="text">
+       <string>send</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="2" colspan="2">
      <widget class="QLabel" name="label">
       <property name="text">
        <string>Размер пакета</string>
       </property>
      </widget>
     </item>
-    <item row="4" column="0" colspan="3">
-     <widget class="QLineEdit" name="messageEdit"/>
+    <item row="4" column="3">
+     <widget class="QPushButton" name="pushButton">
+      <property name="text">
+       <string>file</string>
+      </property>
+     </widget>
     </item>
     <item row="3" column="0">
      <widget class="QLabel" name="label_2">
@@ -68,6 +66,15 @@
     <item row="3" column="1">
      <widget class="QSpinBox" name="spinBox_2"/>
     </item>
+    <item row="4" column="0" colspan="3">
+     <widget class="QLineEdit" name="messageEdit"/>
+    </item>
+    <item row="0" column="1" colspan="4">
+     <widget class="QLineEdit" name="nicknameEdit"/>
+    </item>
+    <item row="1" column="0" colspan="5">
+     <widget class="QListWidget" name="listWidget"/>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -75,7 +82,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>432</width>
+     <width>388</width>
      <height>22</height>
     </rect>
    </property>

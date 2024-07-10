@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QUdpSocket>
 #include <QTimer>
+#include <QFile>
 
 #include "client.h"
 
@@ -29,13 +30,18 @@ private:
     QTimer *sendTimer;
 
 signals:
-    void sendToServer(const QString &nickname, const QString &message, int maxSize = 512);
+    void sendMessageToServer(const QString &nickname, const QString &message, int maxSize = 512);
+    void sendFileToServer(const QString &nickname, QFile &file, int maxSize = 512);
 
 private slots:
     void slotShowMessage(const QString &nickname, const QString &message);
+    void slotShowFile(const QString &nickname, const QString &fileName);
+
     void slotSendMessage();
 
     void on_spinBox_2_valueChanged(int arg1);
+    void slot_on_pushButton_clicked();
+
 };
 
 #endif // MAINWINDOW_H

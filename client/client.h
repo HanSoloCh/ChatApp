@@ -5,6 +5,7 @@
 #include <QUdpSocket>
 #include <QMap>
 #include <QQueue>
+#include <QFile>
 
 #include "message.h"
 
@@ -27,14 +28,17 @@ private:
 
     void processIncomingMessage(const Message::MessageHeader &info, const QByteArray &data);
     void sendByteArray(const Message &message);
-    void makeCompleteMessage(qint32 messageId, qint32 totalParts);
+    void makeCompleteMessage(qint32 messageId, qint32 totalParts, MessageType type);
 
 signals:
     void showMessage(const QString &nickname, const QString &message);
+    void showFile(const QString &nickname, const QString &fileName);
+
 
 public slots:
     void slotReadyRead();
-    void slotSendToServer(const QString &nickname, const QString &message, int maxSize = 512);
+    void slotSendMessageToServer(const QString &nickname, const QString &message, int maxSize = 512);
+    void slotSendFileToServer(const QString &nickname, QFile &file, int maxSize = 512);
     void slotSendPackage();
 };
 
