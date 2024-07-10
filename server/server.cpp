@@ -19,12 +19,12 @@ Server::Server()
 
 void Server::processIncomingMessage(const Message &message, const QHostAddress &sender, quint16 senderPort)
 {
-    if (message.header.type == UserConnected)
+    if (message.header.type == SystemUserConnected)
     {
         clients.insert(qMakePair(sender, senderPort));
         qDebug() << "New user connected" << sender << senderPort;
     }
-    else if (message.header.type == UserDisconnected)
+    else if (message.header.type == SystemUserDisconnected)
     {
         clients.remove(qMakePair(sender, senderPort));
         qDebug() << "User disconnected" << sender << senderPort;

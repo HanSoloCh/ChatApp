@@ -6,8 +6,10 @@
 
 enum MessageType
 {
-    UserConnected,
-    UserDisconnected,
+    SystemUserConnected,
+    SystemUserDisconnected,
+    SystemMessageReceived,
+    SystemAllUsersReceivedMessage,
     UserMessage,
     UserFile,
 };

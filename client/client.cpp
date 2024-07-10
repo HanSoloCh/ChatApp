@@ -16,14 +16,14 @@ Client::Client(quint16 curPort, QObject *parent)
     connect(socket, &QUdpSocket::readyRead, this, &Client::slotReadyRead);
 
     Message helloMessage;
-    helloMessage.header.type = UserConnected;
+    helloMessage.header.type = SystemUserConnected;
     sendByteArray(helloMessage);
 }
 
 Client::~Client()
 {
     Message byeMessage;
-    byeMessage.header.type = UserDisconnected;
+    byeMessage.header.type = SystemUserDisconnected;
     sendByteArray(byeMessage);
 }
 
@@ -120,14 +120,12 @@ void Client::slotSendFileToServer(const QString &nickname, QFile &file, int maxS
 {
     const int maxPacketSize = maxSize - sizeof(Message::MessageHeader) - 1;
 
-    QByteArray headerData;
-    QDataStream out(&headerData, QIODevice::WriteOnly);
-    out << nickname << QFileInfo(file).fileName();
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out << nickname << QFileInfo(file).baseName() << file.readAll();
 
-    int totalParts = (headerData.size() + file.size() + maxPacketSize - 1) / maxPacketSize;
+    int totalParts = (data.size() + maxPacketSize - 1) / maxPacketSize;
     int messageId = currentMessageId++;
-    int totalHeaderParts = (headerData.size() + maxPacketSize - 1) / maxPacketSize;
-    qDebug() << totalParts << totalHeaderParts;
 
     for (int partIndex = 0; partIndex < totalParts; ++partIndex) {
         Message message;
@@ -135,26 +133,10 @@ void Client::slotSendFileToServer(const QString &nickname, QFile &file, int maxS
         message.header.messageId = messageId;
         message.header.partIndex = partIndex;
         message.header.totalPartsCount = totalParts;
-
-        if (partIndex < totalHeaderParts - 1) {
-            qDebug() << "l";
-            message.data = headerData.mid(partIndex * maxPacketSize, maxPacketSize);
-        } else if (partIndex == totalHeaderParts - 1) {
-            qDebug() << "e";
-            message.data = headerData.mid(partIndex * maxPacketSize, maxPacketSize);
-            qDebug() << message.data.size();
-            message.data += file.read(maxPacketSize - message.data.size());
-            qDebug() << message.data.size();
-
-        } else {
-            qDebug() << "q";
-            message.data = file.read(maxPacketSize);
-        }
-
+        message.data = data.mid(partIndex * maxPacketSize, maxPacketSize);
         sendQueue.enqueue(message);
     }
 
-    file.close();
 }
 
 void Client::sendByteArray(const Message &message)
