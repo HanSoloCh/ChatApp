@@ -33,7 +33,6 @@ class Server : public QObject
     void sendToClients(const Message &message, const UserAddreses &clients);
     void sendToClients(const Message &message, const UserAddres &client);
 
-    void serverReceivedMessage(const Message &message, const QHostAddress &sender, quint16 senderPort);
     void notifyClientMessageReceived(const QUuid &messageId, const qint32 &messagePart, const UserAddres &client);
 
     QByteArray makeBytes(const Message &message);

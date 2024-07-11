@@ -47,7 +47,6 @@ void Client::processIncomingMessage(const Message::MessageHeader &info, const QB
 
 void Client::serverReceivedMessage(const QUuid &messageId, const qint32 &messagePart)
 {
-    qDebug() << "OK";
     sentMessage[messageId].remove(messagePart);
     messageProcess[messageId].first++;
     if (messageProcess[messageId].first == messageProcess[messageId].second)
@@ -145,7 +144,6 @@ void Client::sendByteArray(const Message &message)
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
     out << message;
-    qDebug() << data.size();
     socket->writeDatagram(data, QHostAddress::Broadcast, port);
 }
 
