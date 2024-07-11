@@ -9,11 +9,15 @@
 Client::Client(quint16 curPort, QObject *parent)
     : QObject(parent)
     , port(curPort)
-    , currentMessageId(0)
 {
     socket = new QUdpSocket(this);
     socket->bind(QHostAddress::Any, port);
     connect(socket, &QUdpSocket::readyRead, this, &Client::slotReadyRead);
+
+    resendTimer = new QTimer;
+    connect(resendTimer, &QTimer::timeout, this, &Client::slotResendPackages);
+
+    resendTimer->start(10 * 1000);
 
     Message helloMessage(SystemUserConnected);
     sendByteArray(helloMessage);
@@ -28,7 +32,7 @@ Client::~Client()
 
 void Client::processIncomingMessage(const Message::MessageHeader &info, const QByteArray &data)
 {
-    if (info.type == UserMessage || info.type == UserFile)
+    if ((info.type == UserMessage || info.type == UserFile) && !completeMessage.contains(info.messageId))
     {
         messageParts[info.messageId][info.partIndex] = data;
         if (messageParts[info.messageId].size() == info.totalPartsCount)
@@ -38,15 +42,22 @@ void Client::processIncomingMessage(const Message::MessageHeader &info, const QB
         }
         notifyServerMessagePartReceived(info.messageId, info.partIndex);
     } else if (info.type == SystemMessageReceived)
-        serverReceivedMessage(info.messageId);
+        serverReceivedMessage(info.messageId, info.partIndex);
     else if (info.type == SystemAllClientsReceivedMessage)
         emit signalAllClientsReceivedMessage(info.messageId);
 }
 
-void Client::serverReceivedMessage(const QUuid &messageId)
+void Client::serverReceivedMessage(const QUuid &messageId, const qint32 &messagePart)
 {
-    sentMessage.remove(messageId);
-    emit signalServerReceivedMessage(messageId);
+    qDebug() << "OK";
+    sentMessage[messageId].remove(messagePart);
+    messageProcess[messageId].first++;
+    if (messageProcess[messageId].first == messageProcess[messageId].second)
+    {
+        sentMessage.remove(messageId);
+        messageProcess.remove(messageId);
+        emit signalServerReceivedMessage(messageId);
+    }
 }
 
 void Client::notifyServerMessagePartReceived(const QUuid &messageId, const qint32 &partIndex)
@@ -59,8 +70,6 @@ void Client::makeCompleteMessage(QUuid messageId, qint32 totalParts, MessageType
 {
     QByteArray fullMessage;
     QDataStream in(&fullMessage, QIODevice::ReadOnly);
-    QString nickname;
-
     for (qint32 i = 0; i < totalParts; ++i)
     {
         fullMessage.append(messageParts[messageId][i]);
@@ -68,23 +77,34 @@ void Client::makeCompleteMessage(QUuid messageId, qint32 totalParts, MessageType
 
     if (type == UserMessage)
     {
-        QString text;
-        in >> nickname >> text;
-        emit showMessage(nickname, text, messageId);
+        makeCompleteTextMessage(in, messageId);
     }
     else
     {
-        QString fileName;
-        in >> nickname >> fileName;
-        QFile file(QDir::temp().filePath(fileName));
-        if (file.open(QIODevice::WriteOnly))
-        {
-            QByteArray fileData;
-            in >> fileData;
-            file.write(fileData);
-            file.close();
-            emit showFile(nickname, file.fileName(), messageId);
-        }
+        makeCompleteFile(in, messageId);
+    }
+    completeMessage.insert(messageId);
+}
+
+void Client::makeCompleteTextMessage(QDataStream &in, QUuid messageId)
+{
+    QString nickname, text;
+    in >> nickname >> text;
+    emit showMessage(nickname, text, messageId);
+}
+
+void Client::makeCompleteFile(QDataStream &in, QUuid messageId)
+{
+    QString nickname, fileName;
+    in >> nickname >> fileName;
+    QFile file(QDir::temp().filePath(fileName));
+    if (file.open(QIODevice::WriteOnly))
+    {
+        QByteArray fileData;
+        in >> fileData;
+        file.write(fileData);
+        file.close();
+        emit showFile(nickname, file.fileName(), messageId);
     }
 }
 
@@ -136,8 +156,20 @@ void Client::slotSendPackage()
     if (!sendQueue.isEmpty())
     {
         const Message message = sendQueue.dequeue();
-        sentMessage[message.getMessageId()] = message;
+        sentMessage[message.getMessageId()][message.header.partIndex] = message;
+        messageProcess[message.getMessageId()].second = message.header.totalPartsCount;
         sendByteArray(message);
+    }
+}
+
+void Client::slotResendPackages()
+{
+    for (auto &packages : sentMessage)
+    {
+        for (auto &message : packages)
+        {
+            sendByteArray(message);
+        }
     }
 }
 

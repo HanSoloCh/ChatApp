@@ -23,6 +23,11 @@ public:
     UserAddreses getUserAddreses(const QUuid &messageId) const;
     UserAddres popSender(const QUuid &messageId);
 
+    QMap<QUuid, QMap<qint32, Message>> getMessageParts() const
+    {
+        return messageParts;
+    }
+
     void deleteClient(const UserAddres &client);
 
 signals:

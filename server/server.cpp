@@ -13,6 +13,9 @@ Server::Server()
         qDebug() << "Server started on port" << port;
         connect(socket, &QUdpSocket::readyRead, this, &Server::slotReadyRead);
         connect(&messageManager, &MessageManager::allClientsReceivedMessage, this, &Server::slotAllClientsReceivedMessage);
+        resendTiemer = new QTimer(this);
+        connect(resendTiemer, &QTimer::timeout, this, &Server::slotResendPackages);
+        resendTiemer->start(10 * 1000);
     } else {
         qDebug() << "Error starting server";
     }
@@ -39,6 +42,7 @@ void Server::processIncomingMessage(const Message &message, const UserAddres &se
     else
     {
         qDebug() << "Received message part:" << message.header.partIndex + 1 << "of" << message.header.totalPartsCount << "with ID" << message.header.messageId;
+        notifyClientMessageReceived(message.getMessageId(), message.header.partIndex, sender);
         if (messageManager.registerMessagePart(message, sender, clients))
             sendToClients(message, messageManager.getUserAddreses(message.getMessageId()));
         else
@@ -80,10 +84,28 @@ void Server::sendToClients(const Message &message, const UserAddres &client)
     socket->writeDatagram(data, client.first, client.second);
 }
 
+void Server::notifyClientMessageReceived(const QUuid &messageId, const qint32 &messagePart, const UserAddres &client)
+{
+    Message message(SystemMessageReceived, messageId, messagePart);
+    sendToClients(message, client);
+}
+
 void Server::slotAllClientsReceivedMessage(const QUuid &messageId, const UserAddres &sender)
 {
     Message message(SystemAllClientsReceivedMessage, messageId);
     sendToClients(message, sender);
+}
+
+void Server::slotResendPackages()
+{
+    auto messageParts = messageManager.getMessageParts();
+    for (auto it = messageParts.begin(); it != messageParts.end(); ++it)
+    {
+        for (auto &parts : it.value())
+        {
+            sendToClients(parts, messageManager.getUserAddreses(it.key()));
+        }
+    }
 }
 
 

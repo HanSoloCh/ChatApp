@@ -18,7 +18,6 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
-    ../common/abstractMessageManager.h \
     ../common/message.h \
     client.h \
     command.h \

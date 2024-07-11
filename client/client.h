@@ -7,6 +7,7 @@
 #include <QQueue>
 #include <QFile>
 #include <QUuid>
+#include <QTimer>
 
 #include "message.h"
 #include "command.h"
@@ -22,12 +23,17 @@ public:
 private:
     QUdpSocket *socket;
     quint16 port;
+    QTimer *resendTimer;
     QHash<QUuid, QMap<qint32, QByteArray>> messageParts;
     QQueue<Message> sendQueue;
 
     QHash<QUuid, QHash<qint32, Message>> sentMessage;
+    QHash<QUuid, QPair<qint32, qint32>> messageProcess;
+    QSet<QUuid> completeMessage;
 
     void makeCompleteMessage(QUuid messageId, qint32 totalParts, MessageType type);
+    void makeCompleteTextMessage(QDataStream &in, QUuid messageId);
+    void makeCompleteFile(QDataStream &in, QUuid messageId);
     void processIncomingMessage(const Message::MessageHeader &info, const QByteArray &data);
     void sendByteArray(const Message &message);
     void serverReceivedMessage(const QUuid &messageId, const qint32 &messagePart);
@@ -43,9 +49,13 @@ signals:
 
 
 public slots:
-    void slotReadyRead();
     void slotSendToServer(const BaseCommand &command);
     void slotSendPackage();
+
+private slots:
+    void slotReadyRead();
+    void slotResendPackages();
+
 };
 
 

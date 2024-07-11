@@ -71,7 +71,6 @@ void MainWindow::slotShowFile(const QString &nickname, const QString &fileName, 
 
     QPushButton *downloadButton = new QPushButton(QString("%1 send %2").arg(nickname, QFileInfo(fileName).baseName()), ui->listWidget);
     ui->listWidget->setItemWidget(item, downloadButton);
-
     connect(downloadButton, &QPushButton::clicked, [fileName] {
         QString savePath = QFileDialog::getSaveFileName(nullptr, "Save File", QFileInfo(fileName).fileName());
         if (!savePath.isEmpty())
@@ -116,7 +115,7 @@ void MainWindow::slot_on_pushButton_clicked()
         {
             QUuid messageId = QUuid::createUuid();
             slotShowFile(QString("You"), fileName, messageId);
-            SendFileCommand command(UserMessage, getNickname(), file, messageId, ui->spinBox->value());
+            SendFileCommand command(UserFile, getNickname(), file, messageId, ui->spinBox->value());
             emit sendToServer(command);
             file.close();
         }
