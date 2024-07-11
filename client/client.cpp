@@ -1,14 +1,12 @@
 #include "client.h"
 
 #include <QDataStream>
-#include <QFileInfo>
 #include <QDir>
+#include <QFileInfo>
 
 #include "message.h"
 
-Client::Client(quint16 curPort, QObject *parent)
-    : QObject(parent)
-    , port(curPort)
+Client::Client(quint16 curPort, QObject *parent) : QObject(parent), port(curPort)
 {
     socket = new QUdpSocket(this);
     socket->bind(QHostAddress::Any, port);
@@ -29,7 +27,6 @@ Client::~Client()
     sendByteArray(byeMessage);
 }
 
-
 void Client::processIncomingMessage(const Message::MessageHeader &info, const QByteArray &data)
 {
     if ((info.type == UserMessage || info.type == UserFile) && !completeMessage.contains(info.messageId))
@@ -41,7 +38,8 @@ void Client::processIncomingMessage(const Message::MessageHeader &info, const QB
             messageParts.remove(info.messageId);
         }
         notifyServerMessagePartReceived(info.messageId, info.partIndex);
-    } else if (info.type == SystemMessageReceived)
+    }
+    else if (info.type == SystemMessageReceived)
         serverReceivedMessage(info.messageId, info.partIndex);
     else if (info.type == SystemAllClientsReceivedMessage)
         emit signalAllClientsReceivedMessage(info.messageId);
@@ -110,7 +108,8 @@ void Client::makeCompleteFile(QDataStream &in, QUuid messageId)
 
 void Client::slotReadyRead()
 {
-    while (socket->hasPendingDatagrams()) {
+    while (socket->hasPendingDatagrams())
+    {
         QByteArray buffer;
         buffer.resize(socket->pendingDatagramSize());
         QHostAddress sender;
@@ -132,14 +131,14 @@ void Client::slotSendToServer(const BaseCommand &command)
     const int maxPacketSize = command.getMaxSize() - sizeof(Message::MessageHeader) - 1;
     int totalParts = (data.size() + maxPacketSize - 1) / maxPacketSize;
 
-    for (int partIndex = 0; partIndex < totalParts; ++partIndex) {
+    for (int partIndex = 0; partIndex < totalParts; ++partIndex)
+    {
         Message::MessageHeader header(command.type(), command.getId(), partIndex, totalParts);
         Message message(header, data.mid(partIndex * maxPacketSize, maxPacketSize));
 
         sendQueue.enqueue(message);
     }
 }
-
 
 void Client::sendByteArray(const Message &message)
 {
@@ -149,7 +148,6 @@ void Client::sendByteArray(const Message &message)
     qDebug() << data.size();
     socket->writeDatagram(data, QHostAddress::Broadcast, port);
 }
-
 
 void Client::slotSendPackage()
 {
@@ -172,5 +170,3 @@ void Client::slotResendPackages()
         }
     }
 }
-
-

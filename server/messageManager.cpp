@@ -1,7 +1,7 @@
 #include "messageManager.h"
 
-
-bool MessageManager::registerMessagePart(const Message &message, const UserAddres &sender, const UserAddreses &currentClients)
+bool MessageManager::registerMessagePart(const Message &message, const UserAddres &sender,
+                                         const UserAddreses &currentClients)
 {
     UserAddreses users(currentClients);
     users.remove(sender);
@@ -47,11 +47,7 @@ void MessageManager::deleteClientAnswers(const QUuid &messageId, const UserAddre
     }
 }
 
-
-UserAddreses MessageManager::getUserAddreses(const QUuid &messageId) const
-{
-    return pendingClients[messageId];
-}
+UserAddreses MessageManager::getUserAddreses(const QUuid &messageId) const { return pendingClients[messageId]; }
 
 UserAddres MessageManager::popSender(const QUuid &messageId)
 {
@@ -73,10 +69,7 @@ void MessageManager::allClientsReceivedPackage(const QUuid &messageId, const qin
     }
 }
 
-bool MessageManager::isMessageRegister(const QUuid &messageId)
-{
-    return messageParts.contains(messageId);
-}
+bool MessageManager::isMessageRegister(const QUuid &messageId) { return messageParts.contains(messageId); }
 
 void MessageManager::removeMessage(const QUuid &messageId)
 {

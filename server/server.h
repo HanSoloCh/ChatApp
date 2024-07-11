@@ -1,11 +1,11 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <QUdpSocket>
-#include <QSet>
 #include <QPair>
-#include <QUuid>
+#include <QSet>
 #include <QTimer>
+#include <QUdpSocket>
+#include <QUuid>
 
 #include "message.h"
 #include "messageManager.h"
@@ -17,11 +17,11 @@ class Server : public QObject
 {
     Q_OBJECT
 
-public:
+  public:
     Server();
     ~Server() = default;
 
-private:
+  private:
     QUdpSocket *socket;
     quint16 port;
     QSet<UserAddres> clients;
@@ -38,8 +38,7 @@ private:
 
     QByteArray makeBytes(const Message &message);
 
-
-private slots:
+  private slots:
     void slotReadyRead();
     void slotAllClientsReceivedMessage(const QUuid &messageId, const UserAddres &sender);
     void slotResendPackages();

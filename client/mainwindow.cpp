@@ -1,15 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QFileDialog>
 #include <QDataStream>
 #include <QFile>
+#include <QFileDialog>
 #include <QFileInfo>
 
-
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     connect(ui->sendButton, &QPushButton::clicked, this, &MainWindow::slotSendMessage);
@@ -29,10 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
     sendTimer->start(1);
 }
 
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
+MainWindow::~MainWindow() { delete ui; }
 
 QString MainWindow::getNickname()
 {
@@ -55,7 +49,6 @@ QListWidgetItem *MainWindow::getItemByMessageId(const QUuid messageId) const
     return nullptr;
 }
 
-
 void MainWindow::slotShowMessage(const QString &nickname, const QString &message, const QUuid messageId)
 {
     QListWidgetItem *item = new QListWidgetItem(QString("%1: %2").arg(nickname, message));
@@ -69,15 +62,18 @@ void MainWindow::slotShowFile(const QString &nickname, const QString &fileName, 
     item->setData(Qt::UserRole, messageId);
     ui->listWidget->addItem(item);
 
-    QPushButton *downloadButton = new QPushButton(QString("%1 send %2").arg(nickname, QFileInfo(fileName).baseName()), ui->listWidget);
+    QPushButton *downloadButton =
+        new QPushButton(QString("%1 send %2").arg(nickname, QFileInfo(fileName).baseName()), ui->listWidget);
     ui->listWidget->setItemWidget(item, downloadButton);
-    connect(downloadButton, &QPushButton::clicked, [fileName] {
-        QString savePath = QFileDialog::getSaveFileName(nullptr, "Save File", QFileInfo(fileName).fileName());
-        if (!savePath.isEmpty())
-        {
-            QFile::copy(fileName, savePath);
-        }
-    });
+    connect(downloadButton, &QPushButton::clicked,
+            [fileName]
+            {
+                QString savePath = QFileDialog::getSaveFileName(nullptr, "Save File", QFileInfo(fileName).fileName());
+                if (!savePath.isEmpty())
+                {
+                    QFile::copy(fileName, savePath);
+                }
+            });
 }
 
 void MainWindow::slotServerReceivedMessage(const QUuid messageId)
@@ -93,7 +89,6 @@ void MainWindow::slotAllClientsReceivedMessage(const QUuid messageId)
     if (item)
         item->setText(item->text() + "~");
 }
-
 
 void MainWindow::slotSendMessage()
 {
@@ -129,6 +124,3 @@ void MainWindow::on_spinBox_2_valueChanged(int arg1)
     else
         sendTimer->start(arg1 * 1000);
 }
-
-
-

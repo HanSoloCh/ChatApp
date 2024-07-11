@@ -1,21 +1,17 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
-#include <QUuid>
-#include <QString>
 #include <QFile>
+#include <QString>
+#include <QUuid>
 
 #include "message.h"
 
 class BaseCommand
 {
-public:
+  public:
     BaseCommand(MessageType type, const QString nick, const QUuid id, int size = 512)
-        : messageType(type)
-        , messageId(id)
-        , nickname(nick)
-        , maxSize(size)
-        {};
+        : messageType(type), messageId(id), nickname(nick), maxSize(size){};
     virtual ~BaseCommand() = default;
     virtual QByteArray getData() const = 0;
 
@@ -23,34 +19,32 @@ public:
     int getMaxSize() const { return maxSize; }
     QUuid getId() const { return messageId; }
 
-protected:
+  protected:
     MessageType messageType;
     QUuid messageId;
     QString nickname;
     int maxSize;
 };
 
-class SendMessageCommand: public BaseCommand
+class SendMessageCommand : public BaseCommand
 {
-public:
+  public:
     SendMessageCommand(MessageType type, const QString nick, const QString text, const QUuid id, int size = 512)
-        : BaseCommand(type, nick, id, size)
-        , messageText(text)
-        {};
+        : BaseCommand(type, nick, id, size), messageText(text){};
     virtual QByteArray getData() const override;
-protected:
+
+  protected:
     QString messageText;
 };
 
-class SendFileCommand: public BaseCommand
+class SendFileCommand : public BaseCommand
 {
-public:
+  public:
     SendFileCommand(MessageType type, const QString nick, QFile &conFile, const QUuid id, int size = 512)
-        : BaseCommand(type, nick, id, size)
-        , file(conFile)
-        {};
+        : BaseCommand(type, nick, id, size), file(conFile){};
     virtual QByteArray getData() const override;
-protected:
+
+  protected:
     QFile &file;
 };
 

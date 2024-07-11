@@ -5,18 +5,21 @@
 
 #include "message.h"
 
-Server::Server()
-    : port(2323)
+Server::Server() : port(2323)
 {
     socket = new QUdpSocket(this);
-    if (socket->bind(QHostAddress::Any, port)) {
+    if (socket->bind(QHostAddress::Any, port))
+    {
         qDebug() << "Server started on port" << port;
         connect(socket, &QUdpSocket::readyRead, this, &Server::slotReadyRead);
-        connect(&messageManager, &MessageManager::allClientsReceivedMessage, this, &Server::slotAllClientsReceivedMessage);
+        connect(&messageManager, &MessageManager::allClientsReceivedMessage, this,
+                &Server::slotAllClientsReceivedMessage);
         resendTiemer = new QTimer(this);
         connect(resendTiemer, &QTimer::timeout, this, &Server::slotResendPackages);
         resendTiemer->start(10 * 1000);
-    } else {
+    }
+    else
+    {
         qDebug() << "Error starting server";
     }
 }
@@ -32,7 +35,6 @@ void Server::processIncomingMessage(const Message &message, const UserAddres &se
     {
         clients.remove(sender);
         qDebug() << "User disconnected" << sender;
-
     }
     else if (message.header.type == SystemMessageReceived)
     {
@@ -41,7 +43,8 @@ void Server::processIncomingMessage(const Message &message, const UserAddres &se
     }
     else
     {
-        qDebug() << "Received message part:" << message.header.partIndex + 1 << "of" << message.header.totalPartsCount << "with ID" << message.header.messageId;
+        qDebug() << "Received message part:" << message.header.partIndex + 1 << "of" << message.header.totalPartsCount
+                 << "with ID" << message.header.messageId;
         notifyClientMessageReceived(message.getMessageId(), message.header.partIndex, sender);
         if (messageManager.registerMessagePart(message, sender, clients))
             sendToClients(message, messageManager.getUserAddreses(message.getMessageId()));
@@ -50,10 +53,10 @@ void Server::processIncomingMessage(const Message &message, const UserAddres &se
     }
 }
 
-
 void Server::slotReadyRead()
 {
-    while (socket->hasPendingDatagrams()) {
+    while (socket->hasPendingDatagrams())
+    {
         QByteArray buffer;
         buffer.resize(socket->pendingDatagramSize());
         QHostAddress sender;
@@ -75,7 +78,6 @@ void Server::sendToClients(const Message &message, const UserAddreses &clients)
     QByteArray data = makeBytes(message);
     for (const auto &client : qAsConst(clients))
         socket->writeDatagram(data, client.first, client.second);
-
 }
 
 void Server::sendToClients(const Message &message, const UserAddres &client)
@@ -107,7 +109,6 @@ void Server::slotResendPackages()
         }
     }
 }
-
 
 QByteArray Server::makeBytes(const Message &message)
 {

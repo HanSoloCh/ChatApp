@@ -1,26 +1,26 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include <QObject>
-#include <QUdpSocket>
-#include <QMap>
-#include <QQueue>
 #include <QFile>
-#include <QUuid>
+#include <QMap>
+#include <QObject>
+#include <QQueue>
 #include <QTimer>
+#include <QUdpSocket>
+#include <QUuid>
 
-#include "message.h"
 #include "command.h"
+#include "message.h"
 
 class Client : public QObject
 {
     Q_OBJECT
 
-public:
+  public:
     Client(quint16 curPort, QObject *parent = nullptr);
     ~Client();
 
-private:
+  private:
     QUdpSocket *socket;
     quint16 port;
     QTimer *resendTimer;
@@ -40,23 +40,20 @@ private:
     void notifyServerMessagePartReceived(const QUuid &messageId, const qint32 &partIndex);
     void allClientsReceivedMessage() const;
 
-signals:
+  signals:
     void showMessage(const QString &nickname, const QString &message, QUuid messageId);
     void showFile(const QString &nickname, const QString &fileName, QUuid messageId);
 
     void signalServerReceivedMessage(QUuid messageId);
     void signalAllClientsReceivedMessage(QUuid messageId);
 
-
-public slots:
+  public slots:
     void slotSendToServer(const BaseCommand &command);
     void slotSendPackage();
 
-private slots:
+  private slots:
     void slotReadyRead();
     void slotResendPackages();
-
 };
-
 
 #endif // CLIENT_H
