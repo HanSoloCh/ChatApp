@@ -12,6 +12,7 @@ INCLUDEPATH += ../common
 SOURCES += \
         ../common/message.cpp \
         main.cpp \
+        messageManager.cpp \
         server.cpp
 
 # Default rules for deployment.
@@ -21,4 +22,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     ../common/message.h \
+    messageManager.h \
     server.h

@@ -15,35 +15,47 @@ Client::Client(quint16 curPort, QObject *parent)
     socket->bind(QHostAddress::Any, port);
     connect(socket, &QUdpSocket::readyRead, this, &Client::slotReadyRead);
 
-    Message helloMessage;
-    helloMessage.header.type = SystemUserConnected;
+    Message helloMessage(SystemUserConnected);
     sendByteArray(helloMessage);
 }
 
 Client::~Client()
 {
-    Message byeMessage;
-    byeMessage.header.type = SystemUserDisconnected;
+    Message byeMessage(SystemUserDisconnected);
     sendByteArray(byeMessage);
 }
-
 
 
 void Client::processIncomingMessage(const Message::MessageHeader &info, const QByteArray &data)
 {
     if (info.type == UserMessage || info.type == UserFile)
     {
-
         messageParts[info.messageId][info.partIndex] = data;
         if (messageParts[info.messageId].size() == info.totalPartsCount)
         {
             makeCompleteMessage(info.messageId, info.totalPartsCount, info.type);
             messageParts.remove(info.messageId);
         }
-    }
+        notifyServerMessagePartReceived(info.messageId, info.partIndex);
+    } else if (info.type == SystemMessageReceived)
+        serverReceivedMessage(info.messageId);
+    else if (info.type == SystemAllClientsReceivedMessage)
+        emit signalAllClientsReceivedMessage(info.messageId);
 }
 
-void Client::makeCompleteMessage(qint32 messageId, qint32 totalParts, MessageType type)
+void Client::serverReceivedMessage(const QUuid &messageId)
+{
+    sentMessage.remove(messageId);
+    emit signalServerReceivedMessage(messageId);
+}
+
+void Client::notifyServerMessagePartReceived(const QUuid &messageId, const qint32 &partIndex)
+{
+    Message message(SystemMessageReceived, messageId, partIndex);
+    sendByteArray(message);
+}
+
+void Client::makeCompleteMessage(QUuid messageId, qint32 totalParts, MessageType type)
 {
     QByteArray fullMessage;
     QDataStream in(&fullMessage, QIODevice::ReadOnly);
@@ -58,7 +70,7 @@ void Client::makeCompleteMessage(qint32 messageId, qint32 totalParts, MessageTyp
     {
         QString text;
         in >> nickname >> text;
-        emit showMessage(nickname, text);
+        emit showMessage(nickname, text, messageId);
     }
     else
     {
@@ -71,7 +83,7 @@ void Client::makeCompleteMessage(qint32 messageId, qint32 totalParts, MessageTyp
             in >> fileData;
             file.write(fileData);
             file.close();
-            emit showFile(nickname, file.fileName());
+            emit showFile(nickname, file.fileName(), messageId);
         }
     }
 }
@@ -90,67 +102,43 @@ void Client::slotReadyRead()
         Message message;
         in >> message;
 
-        processIncomingMessage(message.header, message.data);
+        processIncomingMessage(message.header, message.messageData);
     }
 }
 
-void Client::slotSendMessageToServer(const QString &nickname, const QString &str, int maxSize)
+void Client::slotSendToServer(const BaseCommand &command)
 {
-    const int maxPacketSize = maxSize - sizeof(Message::MessageHeader) - 1;
-    QByteArray data;
-    QDataStream out(&data, QIODevice::WriteOnly);
-    out << nickname << str;
-
+    QByteArray data = command.getData();
+    const int maxPacketSize = command.getMaxSize() - sizeof(Message::MessageHeader) - 1;
     int totalParts = (data.size() + maxPacketSize - 1) / maxPacketSize;
-    int messageId = currentMessageId++;
 
     for (int partIndex = 0; partIndex < totalParts; ++partIndex) {
-        Message message;
-        message.header.type = UserMessage;
-        message.header.messageId = messageId;
-        message.header.partIndex = partIndex;
-        message.header.totalPartsCount = totalParts;
-        message.data = data.mid(partIndex * maxPacketSize, maxPacketSize);
+        Message::MessageHeader header(command.type(), command.getId(), partIndex, totalParts);
+        Message message(header, data.mid(partIndex * maxPacketSize, maxPacketSize));
 
         sendQueue.enqueue(message);
     }
 }
 
-void Client::slotSendFileToServer(const QString &nickname, QFile &file, int maxSize)
-{
-    const int maxPacketSize = maxSize - sizeof(Message::MessageHeader) - 1;
-
-    QByteArray data;
-    QDataStream out(&data, QIODevice::WriteOnly);
-    out << nickname << QFileInfo(file).baseName() << file.readAll();
-
-    int totalParts = (data.size() + maxPacketSize - 1) / maxPacketSize;
-    int messageId = currentMessageId++;
-
-    for (int partIndex = 0; partIndex < totalParts; ++partIndex) {
-        Message message;
-        message.header.type = UserFile;
-        message.header.messageId = messageId;
-        message.header.partIndex = partIndex;
-        message.header.totalPartsCount = totalParts;
-        message.data = data.mid(partIndex * maxPacketSize, maxPacketSize);
-        sendQueue.enqueue(message);
-    }
-
-}
 
 void Client::sendByteArray(const Message &message)
 {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
     out << message;
+    qDebug() << data.size();
     socket->writeDatagram(data, QHostAddress::Broadcast, port);
 }
+
 
 void Client::slotSendPackage()
 {
     if (!sendQueue.isEmpty())
-        sendByteArray(sendQueue.dequeue());
+    {
+        const Message message = sendQueue.dequeue();
+        sentMessage[message.getMessageId()] = message;
+        sendByteArray(message);
+    }
 }
 
 

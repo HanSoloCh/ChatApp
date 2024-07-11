@@ -4,8 +4,13 @@
 #include <QUdpSocket>
 #include <QSet>
 #include <QPair>
+#include <QUuid>
 
 #include "message.h"
+#include "messageManager.h"
+
+typedef QPair<QHostAddress, quint16> UserAddres;
+typedef QSet<UserAddres> UserAddreses;
 
 class Server : public QObject
 {
@@ -18,14 +23,23 @@ public:
 private:
     QUdpSocket *socket;
     quint16 port;
-    QSet<QPair<QHostAddress, quint16>> clients;
+    QSet<UserAddres> clients;
 
-    void processIncomingMessage(const Message &message, const QHostAddress &sender, quint16 senderPort);
+    MessageManager messageManager;
 
-    void sendToClients(const Message &message, const QHostAddress &sender, quint16 senderPort);
+    void processIncomingMessage(const Message &message, const UserAddres &sender);
+    void sendToClients(const Message &message, const UserAddreses &clients);
+    void sendToClients(const Message &message, const UserAddres &client);
+
+    void serverReceivedMessage(const Message &message, const QHostAddress &sender, quint16 senderPort);
+
+
+    QByteArray makeBytes(const Message &message);
+
 
 public slots:
     void slotReadyRead();
+    void slotAllClientsReceivedMessage(const QUuid &messageId, const UserAddres &sender);
 };
 
 #endif // SERVER_H

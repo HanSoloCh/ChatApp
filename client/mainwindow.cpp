@@ -18,8 +18,11 @@ MainWindow::MainWindow(QWidget *parent)
     client = new Client(2323, this);
     connect(client, &Client::showMessage, this, &MainWindow::slotShowMessage);
     connect(client, &Client::showFile, this, &MainWindow::slotShowFile);
-    connect(this, &MainWindow::sendMessageToServer, client, &Client::slotSendMessageToServer);
-    connect(this, &MainWindow::sendFileToServer, client, &Client::slotSendFileToServer);
+
+    connect(client, &Client::signalServerReceivedMessage, this, &MainWindow::slotServerReceivedMessage);
+    connect(client, &Client::signalAllClientsReceivedMessage, this, &MainWindow::slotAllClientsReceivedMessage);
+
+    connect(this, &MainWindow::sendToServer, client, &Client::slotSendToServer);
 
     sendTimer = new QTimer(this);
     connect(sendTimer, &QTimer::timeout, client, &Client::slotSendPackage);
@@ -40,15 +43,30 @@ QString MainWindow::getNickname()
     return nickname;
 }
 
-
-void MainWindow::slotShowMessage(const QString &nickname, const QString &message)
+QListWidgetItem *MainWindow::getItemByMessageId(const QUuid messageId) const
 {
-    ui->listWidget->addItem(QString("%1: %2").arg(nickname, message));
+    QListWidgetItem *item;
+    for (int i = 0; i < ui->listWidget->count(); ++i)
+    {
+        item = ui->listWidget->item(i);
+        if (item->data(Qt::UserRole).toUuid() == messageId)
+            return item;
+    }
+    return nullptr;
 }
 
-void MainWindow::slotShowFile(const QString &nickname, const QString &fileName)
+
+void MainWindow::slotShowMessage(const QString &nickname, const QString &message, const QUuid messageId)
+{
+    QListWidgetItem *item = new QListWidgetItem(QString("%1: %2").arg(nickname, message));
+    item->setData(Qt::UserRole, messageId);
+    ui->listWidget->addItem(item);
+}
+
+void MainWindow::slotShowFile(const QString &nickname, const QString &fileName, const QUuid messageId)
 {
     QListWidgetItem *item = new QListWidgetItem();
+    item->setData(Qt::UserRole, messageId);
     ui->listWidget->addItem(item);
 
     QPushButton *downloadButton = new QPushButton(QString("%1 send %2").arg(nickname, QFileInfo(fileName).baseName()), ui->listWidget);
@@ -63,24 +81,29 @@ void MainWindow::slotShowFile(const QString &nickname, const QString &fileName)
     });
 }
 
+void MainWindow::slotServerReceivedMessage(const QUuid messageId)
+{
+    QListWidgetItem *item = getItemByMessageId(messageId);
+    if (item)
+        item->setText(item->text() + "~");
+}
+
+void MainWindow::slotAllClientsReceivedMessage(const QUuid messageId)
+{
+    QListWidgetItem *item = getItemByMessageId(messageId);
+    if (item)
+        item->setText(item->text() + "~");
+}
+
 
 void MainWindow::slotSendMessage()
 {
-    QString text = ui->messageEdit->text();
-    slotShowMessage(QString("Me"), text);
-    emit sendMessageToServer(getNickname(), text, ui->spinBox->value());
+    QUuid messageId = QUuid::createUuid();
+    slotShowMessage(QString("Me"), ui->messageEdit->text(), messageId);
+    SendMessageCommand command(UserMessage, getNickname(), ui->messageEdit->text(), messageId, ui->spinBox->value());
+    emit sendToServer(command);
     ui->messageEdit->clear();
 }
-
-
-void MainWindow::on_spinBox_2_valueChanged(int arg1)
-{
-    if (arg1 == 0)
-        sendTimer->start(1);
-    else
-        sendTimer->start(arg1 * 1000);
-}
-
 
 void MainWindow::slot_on_pushButton_clicked()
 {
@@ -91,10 +114,22 @@ void MainWindow::slot_on_pushButton_clicked()
         QFile file(fileName);
         if (file.open(QIODevice::ReadOnly))
         {
-            slotShowFile(QString("You"), fileName);
-            emit sendFileToServer(getNickname(), file, ui->spinBox->value());
+            QUuid messageId = QUuid::createUuid();
+            slotShowFile(QString("You"), fileName, messageId);
+            SendFileCommand command(UserMessage, getNickname(), file, messageId, ui->spinBox->value());
+            emit sendToServer(command);
             file.close();
         }
     }
 }
+
+void MainWindow::on_spinBox_2_valueChanged(int arg1)
+{
+    if (arg1 == 0)
+        sendTimer->start(1);
+    else
+        sendTimer->start(arg1 * 1000);
+}
+
+
 

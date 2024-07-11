@@ -5,8 +5,12 @@
 #include <QUdpSocket>
 #include <QTimer>
 #include <QFile>
+#include <QUuid>
+#include <QListWidgetItem>
 
 #include "client.h"
+#include "command.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,13 +33,17 @@ private:
     Client *client;
     QTimer *sendTimer;
 
+    QListWidgetItem *getItemByMessageId(const QUuid messageId) const;
+
 signals:
-    void sendMessageToServer(const QString &nickname, const QString &message, int maxSize = 512);
-    void sendFileToServer(const QString &nickname, QFile &file, int maxSize = 512);
+    void sendToServer(const BaseCommand &command);
 
 private slots:
-    void slotShowMessage(const QString &nickname, const QString &message);
-    void slotShowFile(const QString &nickname, const QString &fileName);
+    void slotShowMessage(const QString &nickname, const QString &message, const QUuid messageId);
+    void slotShowFile(const QString &nickname, const QString &fileName, const QUuid messageId);
+
+    void slotServerReceivedMessage(const QUuid messageId);
+    void slotAllClientsReceivedMessage(const QUuid messageId);
 
     void slotSendMessage();
 
