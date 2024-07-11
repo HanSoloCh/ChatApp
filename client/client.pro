@@ -13,15 +13,15 @@ INCLUDEPATH += ../common
 SOURCES += \
     ../common/message.cpp \
     client.cpp \
-    command.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    messageData.cpp
 
 HEADERS += \
     ../common/message.h \
     client.h \
-    command.h \
-    mainwindow.h
+    mainwindow.h \
+    messageData.h
 
 FORMS += \
     mainwindow.ui

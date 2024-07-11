@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 {
     ui->setupUi(this);
     connect(ui->sendButton, &QPushButton::clicked, this, &MainWindow::slotSendMessage);
-    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::slot_on_pushButton_clicked);
+    connect(ui->fileSendButton, &QPushButton::clicked, this, &MainWindow::slotSendFile);
 
     client = new Client(2323, this);
     connect(client, &Client::showMessage, this, &MainWindow::slotShowMessage);
@@ -94,12 +94,12 @@ void MainWindow::slotSendMessage()
 {
     QUuid messageId = QUuid::createUuid();
     slotShowMessage(QString("Me"), ui->messageEdit->text(), messageId);
-    SendMessageCommand command(UserMessage, getNickname(), ui->messageEdit->text(), messageId, ui->spinBox->value());
-    emit sendToServer(command);
+    TextMessageData messageData(UserMessage, getNickname(), ui->messageEdit->text(), messageId, ui->spinBox->value());
+    emit sendToServer(messageData);
     ui->messageEdit->clear();
 }
 
-void MainWindow::slot_on_pushButton_clicked()
+void MainWindow::slotSendFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this, "Select File to Send");
 
@@ -110,8 +110,8 @@ void MainWindow::slot_on_pushButton_clicked()
         {
             QUuid messageId = QUuid::createUuid();
             slotShowFile(QString("You"), fileName, messageId);
-            SendFileCommand command(UserFile, getNickname(), file, messageId, ui->spinBox->value());
-            emit sendToServer(command);
+            FileMessageData messageData(UserFile, getNickname(), file, messageId, ui->spinBox->value());
+            emit sendToServer(messageData);
             file.close();
         }
     }

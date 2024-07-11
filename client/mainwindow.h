@@ -9,7 +9,7 @@
 #include <QUuid>
 
 #include "client.h"
-#include "command.h"
+#include "messageData.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -36,7 +36,7 @@ class MainWindow : public QMainWindow
     QListWidgetItem *getItemByMessageId(const QUuid messageId) const;
 
   signals:
-    void sendToServer(const BaseCommand &command);
+    void sendToServer(const BaseMessageData &messageData);
 
   private slots:
     void slotShowMessage(const QString &nickname, const QString &message, const QUuid messageId);
@@ -46,9 +46,9 @@ class MainWindow : public QMainWindow
     void slotAllClientsReceivedMessage(const QUuid messageId);
 
     void slotSendMessage();
+    void slotSendFile();
 
     void on_spinBox_2_valueChanged(int arg1);
-    void slot_on_pushButton_clicked();
 };
 
 #endif // MAINWINDOW_H

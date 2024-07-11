@@ -9,7 +9,7 @@
 #include <QUdpSocket>
 #include <QUuid>
 
-#include "command.h"
+#include "messageData.h"
 #include "message.h"
 
 class Client : public QObject
@@ -48,7 +48,7 @@ class Client : public QObject
     void signalAllClientsReceivedMessage(QUuid messageId);
 
   public slots:
-    void slotSendToServer(const BaseCommand &command);
+    void slotSendToServer(const BaseMessageData &messageData);
     void slotSendPackage();
 
   private slots:

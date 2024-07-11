@@ -124,15 +124,15 @@ void Client::slotReadyRead()
     }
 }
 
-void Client::slotSendToServer(const BaseCommand &command)
+void Client::slotSendToServer(const BaseMessageData &messageData)
 {
-    QByteArray data = command.getData();
-    const int maxPacketSize = command.getMaxSize() - sizeof(Message::MessageHeader) - 1;
+    QByteArray data = messageData.getData();
+    const int maxPacketSize = messageData.getMaxSize() - sizeof(Message::MessageHeader) - 1;
     int totalParts = (data.size() + maxPacketSize - 1) / maxPacketSize;
 
     for (int partIndex = 0; partIndex < totalParts; ++partIndex)
     {
-        Message::MessageHeader header(command.type(), command.getId(), partIndex, totalParts);
+        Message::MessageHeader header(messageData.type(), messageData.getId(), partIndex, totalParts);
         Message message(header, data.mid(partIndex * maxPacketSize, maxPacketSize));
 
         sendQueue.enqueue(message);

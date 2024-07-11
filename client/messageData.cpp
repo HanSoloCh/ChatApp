@@ -1,9 +1,9 @@
-#include "command.h"
+#include "messageData.h"
 
 #include <QDataStream>
 #include <QFileInfo>
 
-QByteArray SendMessageCommand::getData() const
+QByteArray TextMessageData::getData() const
 {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
@@ -11,7 +11,7 @@ QByteArray SendMessageCommand::getData() const
     return data;
 }
 
-QByteArray SendFileCommand::getData() const
+QByteArray FileMessageData::getData() const
 {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
