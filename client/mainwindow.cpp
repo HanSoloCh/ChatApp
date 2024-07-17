@@ -12,14 +12,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->sendButton, &QPushButton::clicked, this, &MainWindow::slotSendMessage);
     connect(ui->fileSendButton, &QPushButton::clicked, this, &MainWindow::slotSendFile);
 
-    client = new Client(2323, this);
+    client = new Client(ui->currentPort->value(), this);
     connect(client, &Client::showMessage, this, &MainWindow::slotShowMessage);
     connect(client, &Client::showFile, this, &MainWindow::slotShowFile);
 
-    connect(client, &Client::signalServerReceivedMessage, this, &MainWindow::slotServerReceivedMessage);
-    connect(client, &Client::signalAllClientsReceivedMessage, this, &MainWindow::slotAllClientsReceivedMessage);
+    connect(client, &Client::showMessageReceived, this, &MainWindow::slotShowMessageReceived);
 
-    connect(this, &MainWindow::sendToServer, client, &Client::slotSendToServer);
+    connect(this, &MainWindow::sendMessage, client, &Client::slotSendMessage);
+    connect(this, &MainWindow::portChanged, client, &Client::slotPortChanged);
 
     sendTimer = new QTimer(this);
     connect(sendTimer, &QTimer::timeout, client, &Client::slotSendPackage);
@@ -76,14 +76,7 @@ void MainWindow::slotShowFile(const QString &nickname, const QString &fileName, 
             });
 }
 
-void MainWindow::slotServerReceivedMessage(const QUuid messageId)
-{
-    QListWidgetItem *item = getItemByMessageId(messageId);
-    if (item)
-        item->setText(item->text() + "~");
-}
-
-void MainWindow::slotAllClientsReceivedMessage(const QUuid messageId)
+void MainWindow::slotShowMessageReceived(const QUuid messageId)
 {
     QListWidgetItem *item = getItemByMessageId(messageId);
     if (item)
@@ -95,8 +88,8 @@ void MainWindow::slotSendMessage()
     QUuid messageId = QUuid::createUuid();
     slotShowMessage(QString("Me"), ui->messageEdit->text(), messageId);
     TextMessageData messageData(UserMessage, getNickname(), ui->messageEdit->text(), messageId, ui->spinBox->value());
-    emit sendToServer(messageData);
     ui->messageEdit->clear();
+    emit sendMessage(messageData, qMakePair(ui->senderIP->text(), ui->senderPort->value()));
 }
 
 void MainWindow::slotSendFile()
@@ -111,7 +104,7 @@ void MainWindow::slotSendFile()
             QUuid messageId = QUuid::createUuid();
             slotShowFile(QString("You"), fileName, messageId);
             FileMessageData messageData(UserFile, getNickname(), file, messageId, ui->spinBox->value());
-            emit sendToServer(messageData);
+            emit sendMessage(messageData, qMakePair(ui->senderIP->text(), ui->senderPort->value()));
             file.close();
         }
     }
@@ -122,5 +115,11 @@ void MainWindow::on_spinBox_2_valueChanged(int arg1)
     if (arg1 == 0)
         sendTimer->start(1);
     else
-        sendTimer->start(arg1 * 1000);
+        sendTimer->start(arg1);
+}
+
+
+void MainWindow::on_currentPort_valueChanged(int arg1)
+{
+    emit portChanged(arg1);
 }

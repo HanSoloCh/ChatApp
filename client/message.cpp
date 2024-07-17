@@ -30,7 +30,7 @@ QDataStream &operator>>(QDataStream &in, Message &message)
 Message::Message(MessageType curType, QUuid id, qint32 index, qint32 count, const QByteArray &data)
     : header(curType, id, index, count), messageData(data){};
 
-Message::Message(MessageType curType, QUuid id, qint32 index) : header(curType, id, index){};
+Message::Message(MessageType curType, QUuid id) : header(curType, id){};
 
 Message::Message(const Message::MessageHeader &head, const QByteArray &data) : header(head), messageData(data){};
 

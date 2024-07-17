@@ -36,19 +36,20 @@ class MainWindow : public QMainWindow
     QListWidgetItem *getItemByMessageId(const QUuid messageId) const;
 
   signals:
-    void sendToServer(const BaseMessageData &messageData);
+    void sendMessage(const BaseMessageData &messageData, const QPair<QHostAddress, quint16> &addres);
+    void portChanged(quint16 port);
 
   private slots:
     void slotShowMessage(const QString &nickname, const QString &message, const QUuid messageId);
     void slotShowFile(const QString &nickname, const QString &fileName, const QUuid messageId);
 
-    void slotServerReceivedMessage(const QUuid messageId);
-    void slotAllClientsReceivedMessage(const QUuid messageId);
+    void slotShowMessageReceived(const QUuid messageId);
 
     void slotSendMessage();
     void slotSendFile();
 
     void on_spinBox_2_valueChanged(int arg1);
+    void on_currentPort_valueChanged(int arg1);
 };
 
 #endif // MAINWINDOW_H

@@ -6,23 +6,111 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>388</width>
-    <height>489</height>
+    <width>409</width>
+    <height>471</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="0" colspan="4">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Your IP:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="currentIP">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_6">
+        <property name="midLineWidth">
+         <number>0</number>
+        </property>
+        <property name="text">
+         <string>Input port:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QSpinBox" name="currentPort">
+        <property name="minimum">
+         <number>1024</number>
+        </property>
+        <property name="maximum">
+         <number>65535</number>
+        </property>
+        <property name="value">
+         <number>1234</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Sender IP:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="senderIP"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Sender port:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QSpinBox" name="senderPort">
+        <property name="minimum">
+         <number>1024</number>
+        </property>
+        <property name="maximum">
+         <number>65535</number>
+        </property>
+        <property name="value">
+         <number>1024</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="1" column="0">
      <widget class="QLabel" name="niacknameLabel">
       <property name="text">
        <string>Nickname:</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="4">
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Частота отправки</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QSpinBox" name="spinBox_2"/>
+    </item>
+    <item row="3" column="2">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Размер пакета</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="3">
      <widget class="QSpinBox" name="spinBox">
       <property name="minimum">
        <number>30</number>
@@ -38,45 +126,28 @@
       </property>
      </widget>
     </item>
-    <item row="4" column="4">
-     <widget class="QPushButton" name="sendButton">
-      <property name="text">
-       <string>send</string>
-      </property>
-     </widget>
+    <item row="4" column="0" colspan="2">
+     <widget class="QLineEdit" name="messageEdit"/>
     </item>
-    <item row="3" column="2" colspan="2">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>Размер пакета</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="3">
+    <item row="4" column="2">
      <widget class="QPushButton" name="fileSendButton">
       <property name="text">
        <string>file</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="0">
-     <widget class="QLabel" name="label_2">
+    <item row="4" column="3">
+     <widget class="QPushButton" name="sendButton">
       <property name="text">
-       <string>Частота отправки</string>
+       <string>send</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="1">
-     <widget class="QSpinBox" name="spinBox_2"/>
-    </item>
-    <item row="4" column="0" colspan="3">
-     <widget class="QLineEdit" name="messageEdit"/>
-    </item>
-    <item row="0" column="1" colspan="4">
-     <widget class="QLineEdit" name="nicknameEdit"/>
-    </item>
-    <item row="1" column="0" colspan="5">
+    <item row="2" column="0" colspan="4">
      <widget class="QListWidget" name="listWidget"/>
+    </item>
+    <item row="1" column="1" colspan="3">
+     <widget class="QLineEdit" name="nicknameEdit"/>
     </item>
    </layout>
   </widget>
@@ -85,7 +156,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>388</width>
+     <width>409</width>
      <height>22</height>
     </rect>
    </property>

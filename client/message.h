@@ -7,10 +7,7 @@
 
 enum MessageType
 {
-    SystemUserConnected,
-    SystemUserDisconnected,
     SystemMessageReceived,
-    SystemAllClientsReceivedMessage,
     UserMessage,
     UserFile,
 };
@@ -21,7 +18,7 @@ struct Message
 
     Message() = default;
     Message(MessageType curType, QUuid id, qint32 index, qint32 count, const QByteArray &data);
-    explicit Message(MessageType curType, QUuid id = 0, qint32 index = 0);
+    Message(MessageType curType, QUuid id);
     Message(const Message::MessageHeader &head, const QByteArray &data);
 
     QUuid getMessageId() const { return header.messageId; }

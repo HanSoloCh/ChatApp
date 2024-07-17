@@ -11,6 +11,11 @@
 
 #include "messageData.h"
 #include "message.h"
+#include "messageManager.h"
+
+typedef QPair<QHostAddress, quint16> UserAddres;
+typedef QSet<UserAddres> UserAddreses;
+
 
 class Client : public QObject
 {
@@ -18,42 +23,38 @@ class Client : public QObject
 
   public:
     Client(quint16 curPort, QObject *parent = nullptr);
-    ~Client();
+    ~Client() = default;
 
   private:
     QUdpSocket *socket;
     quint16 port;
     QTimer *resendTimer;
-    QHash<QUuid, QMap<qint32, QByteArray>> messageParts;
     QQueue<Message> sendQueue;
 
-    QHash<QUuid, QHash<qint32, Message>> sentMessage;
-    QHash<QUuid, QPair<qint32, qint32>> messageProcess;
-    QSet<QUuid> completeMessage;
+    MessageManager *messageManager;
 
-    void makeCompleteMessage(QUuid messageId, qint32 totalParts, MessageType type);
-    void makeCompleteTextMessage(QDataStream &in, QUuid messageId);
-    void makeCompleteFile(QDataStream &in, QUuid messageId);
     void processIncomingMessage(const Message::MessageHeader &info, const QByteArray &data);
-    void sendByteArray(const Message &message);
-    void serverReceivedMessage(const QUuid &messageId, const qint32 &messagePart);
-    void notifyServerMessagePartReceived(const QUuid &messageId, const qint32 &partIndex);
-    void allClientsReceivedMessage() const;
+    void sendByteArray(const Message &message, const UserAddres &addres);
 
   signals:
     void showMessage(const QString &nickname, const QString &message, QUuid messageId);
     void showFile(const QString &nickname, const QString &fileName, QUuid messageId);
 
-    void signalServerReceivedMessage(QUuid messageId);
-    void signalAllClientsReceivedMessage(QUuid messageId);
+    void showMessageReceived(const QUuid &messageId);
 
   public slots:
-    void slotSendToServer(const BaseMessageData &messageData);
+    void slotSendMessage(const BaseMessageData &messageData, const UserAddres &addres);
     void slotSendPackage();
+    void slotPortChanged(quint16 port);
 
   private slots:
     void slotReadyRead();
-    void slotResendPackages();
+    // void slotResendPackages();
+    void slotTextMessageComplete(const QUuid &messageId, QByteArray &message);
+    void slotFileMessageComplete(const QUuid &messageId, QByteArray &message);
+
+    void slotMessageReceived(const QUuid &messageId);
+    void slotNotifyClientMessageReceived(const QUuid &messageId, const UserAddres &addres);
 };
 
 #endif // CLIENT_H
