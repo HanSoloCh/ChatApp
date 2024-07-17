@@ -21,6 +21,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(this, &MainWindow::sendMessage, client, &Client::slotSendMessage);
     connect(this, &MainWindow::portChanged, client, &Client::slotPortChanged);
 
+    connect(ui->currentPort, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &MainWindow::slotPortChanged);
+
     sendTimer = new QTimer(this);
     connect(sendTimer, &QTimer::timeout, client, &Client::slotSendPackage);
     sendTimer->start(1);
@@ -109,4 +112,4 @@ void MainWindow::on_spinBox_2_valueChanged(int arg1) {
         sendTimer->start(arg1);
 }
 
-void MainWindow::on_currentPort_valueChanged(int arg1) { emit portChanged(arg1); }
+void MainWindow::slotPortChanged(int arg1) { emit portChanged(arg1); }
