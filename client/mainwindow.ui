@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>409</width>
-    <height>471</height>
+    <width>444</width>
+    <height>492</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,14 +20,14 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Your IP:</string>
+         <string>Твой IP:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
        <widget class="QLabel" name="currentIP">
         <property name="text">
-         <string/>
+         <string>127.0.0.1</string>
         </property>
        </widget>
       </item>
@@ -37,7 +37,7 @@
          <number>0</number>
         </property>
         <property name="text">
-         <string>Input port:</string>
+         <string>Порт приема:</string>
         </property>
        </widget>
       </item>
@@ -57,7 +57,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Sender IP:</string>
+         <string>IP отправки:</string>
         </property>
        </widget>
       </item>
@@ -67,7 +67,7 @@
       <item row="1" column="2">
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>Sender port:</string>
+         <string>Порт отправки:</string>
         </property>
        </widget>
       </item>
@@ -96,7 +96,7 @@
     <item row="3" column="0">
      <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>Частота отправки</string>
+       <string>Частота отправки:</string>
       </property>
      </widget>
     </item>
@@ -106,7 +106,7 @@
     <item row="3" column="2">
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>Размер пакета</string>
+       <string>Размер пакета:</string>
       </property>
      </widget>
     </item>
@@ -156,7 +156,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>409</width>
+     <width>444</width>
      <height>22</height>
     </rect>
    </property>

@@ -4,48 +4,72 @@
 #include <QHostAddress>
 #include <QMap>
 #include <QUuid>
+#include <QTimer>
 
 #include "message.h"
 
 typedef QPair<QHostAddress, quint16> UserAddres;
 
-class MessageManager : public QObject
+class BaseMessageManager: public QObject
+{
+public:
+    BaseMessageManager(QObject *parent = nullptr) : QObject(parent)
+        {};
+    virtual ~BaseMessageManager() = 0;
+
+    UserAddres getClient(const QUuid &messageId) const;
+
+    virtual void addMessage(const Message &message, const UserAddres &messageSender);
+    void removeMessage(const QUuid &messageId);
+
+protected:
+    QHash<QUuid, UserAddres> messageClient;
+    QHash<QUuid, QMap<qint32, Message>> messageParts;
+};
+
+
+class SendMessageManager: public BaseMessageManager
 {
     Q_OBJECT
-  public:
-    MessageManager(QObject *parent = nullptr) : QObject(parent)
-    {};
-    ~MessageManager() = default;
+public:
+    SendMessageManager(QObject *parent = nullptr) : BaseMessageManager(parent)
+        {};
+    ~SendMessageManager() = default;
 
-    void processIncomingMessage(const Message &message, const UserAddres &messageSender);
-    void addSentMessagePart(const QUuid &messageId, const qint32 &messagePart, const Message &message, const UserAddres &addres);
-    UserAddres getSender(const QUuid &messageId) const;
-    UserAddres getClientAddres(const QUuid &messageId) const;
+    Message getMessage(const QUuid &messageId, quint32 messagePart) const;
+};
 
-  signals:
+
+class ReceivedMessageManager: public BaseMessageManager
+{
+    Q_OBJECT
+public:
+    ReceivedMessageManager(QObject *parent = nullptr);
+    ~ReceivedMessageManager() = default;
+
+    void addMessage(const Message &message, const UserAddres &messageSender) override;
+
+signals:
     void textMessageComplete(const QUuid &messageId, QByteArray &message);
     void fileMessageComplete(const QUuid &messageId, QByteArray &message);
 
-    void messageReceived(const QUuid &messageId);
     void notifyClientMessageReceived(const QUuid &messageId, const UserAddres &addres);
 
-  private:
-    QHash<QUuid, UserAddres> messageAddres; // Клиент, который должен получить то или иное сообщение
-    QHash<QUuid, QHash<qint32, Message>> messages; // Части отправленных сообщений (пакеты сообщения)
+    void requestMissingPart(const QUuid &messageId, quint32 messagePart);
 
-    QHash<QUuid, QMap<qint32, QByteArray>> receivedParts; // Части полученных сообщений
-    QHash<QUuid, UserAddres> senders; // Клиент, отправивший сообщение
+private slots:
+    void slotRequestMissingParts();
 
-    QSet<QUuid> completeMessage; // Все завершенные сообщения
+private:
+    QSet<QUuid> completeMessage;
 
-    void messageProcess(const Message::MessageHeader &info, const QByteArray &data, const UserAddres &messageSender);
+    QTimer *recedTimer;
 
-    void incommingMessagePart(const Message::MessageHeader &info, const QByteArray &data, const UserAddres &messageSender);
-    void incommingAnswer(const QUuid &messageId);
+    void messageComplete(const QUuid &messageId, MessageType type);
+    void makeCompleteMessage(const QUuid &messageId, MessageType type);
 
-    void makeCompleteMessage(const QUuid &messageId, qint32 totalParts, MessageType type);
-
-    void removeMessage(const QUuid &messageId);
+    void requestMissingParts(const QUuid &messageId, quint32 totalPartsCount);
+    quint32 getTotalPartsCount(const QUuid &messageId);
 };
 
 #endif // MESSAGEMANAGER_H

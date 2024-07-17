@@ -5,7 +5,6 @@
 #include <QMap>
 #include <QObject>
 #include <QQueue>
-#include <QTimer>
 #include <QUdpSocket>
 #include <QUuid>
 
@@ -14,27 +13,14 @@
 #include "messageManager.h"
 
 typedef QPair<QHostAddress, quint16> UserAddres;
-typedef QSet<UserAddres> UserAddreses;
-
 
 class Client : public QObject
 {
     Q_OBJECT
 
   public:
-    Client(quint16 curPort, QObject *parent = nullptr);
+    explicit Client(quint16 curPort, QObject *parent = nullptr);
     ~Client() = default;
-
-  private:
-    QUdpSocket *socket;
-    quint16 port;
-    QTimer *resendTimer;
-    QQueue<Message> sendQueue;
-
-    MessageManager *messageManager;
-
-    void processIncomingMessage(const Message::MessageHeader &info, const QByteArray &data);
-    void sendByteArray(const Message &message, const UserAddres &addres);
 
   signals:
     void showMessage(const QString &nickname, const QString &message, QUuid messageId);
@@ -49,12 +35,27 @@ class Client : public QObject
 
   private slots:
     void slotReadyRead();
-    // void slotResendPackages();
+
     void slotTextMessageComplete(const QUuid &messageId, QByteArray &message);
     void slotFileMessageComplete(const QUuid &messageId, QByteArray &message);
 
     void slotMessageReceived(const QUuid &messageId);
     void slotNotifyClientMessageReceived(const QUuid &messageId, const UserAddres &addres);
+
+    void slotRequestMissingPart(const QUuid &messageId, quint32 messagePart);
+
+private:
+    QUdpSocket *socket;
+    quint16 port;
+    QTimer *resendTimer;
+    QQueue<Message> sendQueue;
+
+    ReceivedMessageManager *receivedMessageManager;
+    SendMessageManager *sendMessageManager;
+
+    void processIncomingMessage(const Message &message, const UserAddres &sender);
+    void sendByteArray(const Message &message, const UserAddres &addres);
+
 };
 
 #endif // CLIENT_H

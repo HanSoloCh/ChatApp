@@ -49,7 +49,6 @@ class MainWindow : public QMainWindow
     void slotSendFile();
 
     void on_spinBox_2_valueChanged(int arg1);
-    void on_currentPort_valueChanged(int arg1);
 };
 
 #endif // MAINWINDOW_H

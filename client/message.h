@@ -8,6 +8,7 @@
 enum MessageType
 {
     SystemMessageReceived,
+    SystemRequestMessagePart,
     UserMessage,
     UserFile,
 };
@@ -17,16 +18,19 @@ struct Message
     struct MessageHeader;
 
     Message() = default;
-    Message(MessageType curType, QUuid id, qint32 index, qint32 count, const QByteArray &data);
-    Message(MessageType curType, QUuid id);
+    Message(MessageType curType, QUuid id, quint32 index, quint32 count, const QByteArray &data);
+    Message(MessageType curType, QUuid id, quint32 index = 0);
     Message(const Message::MessageHeader &head, const QByteArray &data);
 
     QUuid getMessageId() const { return header.messageId; }
+    qint32 getIndex() const { return header.partIndex; }
+    qint32 getTotalPartsCount() const { return header.totalPartsCount; }
+    MessageType getMessageType() const {return header.type; }
 
     struct MessageHeader
     {
         MessageHeader() = default;
-        explicit MessageHeader(MessageType curType, QUuid id = 0, qint32 index = 0, qint32 count = 0);
+        explicit MessageHeader(MessageType curType, QUuid id = 0, quint32 index = 0, quint32 count = 0);
         MessageType type;
         QUuid messageId;
         qint32 partIndex;

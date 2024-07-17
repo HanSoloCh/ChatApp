@@ -12,24 +12,15 @@ Client::Client(quint16 curPort, QObject *parent) : QObject(parent), port(curPort
     socket->bind(QHostAddress::LocalHost, port);
     connect(socket, &QUdpSocket::readyRead, this, &Client::slotReadyRead);
 
-    messageManager = new MessageManager(this);
-    connect(messageManager, &MessageManager::textMessageComplete, this, &Client::slotTextMessageComplete);
-    connect(messageManager, &MessageManager::fileMessageComplete, this, &Client::slotFileMessageComplete);
+    sendMessageManager = new SendMessageManager(this);
 
-    connect(messageManager, &MessageManager::messageReceived, this, &Client::slotMessageReceived);
-    connect(messageManager, &MessageManager::notifyClientMessageReceived, this, &Client::slotNotifyClientMessageReceived);
+    receivedMessageManager = new ReceivedMessageManager(this);
+    connect(receivedMessageManager, &ReceivedMessageManager::textMessageComplete, this, &Client::slotTextMessageComplete);
+    connect(receivedMessageManager, &ReceivedMessageManager::fileMessageComplete, this, &Client::slotFileMessageComplete);
 
-    // resendTimer = new QTimer;
-    // connect(resendTimer, &QTimer::timeout, this, &Client::slotResendPackages);
-
-    // resendTimer->start(100);
+    connect(receivedMessageManager, &ReceivedMessageManager::notifyClientMessageReceived, this, &Client::slotNotifyClientMessageReceived);
+    connect(receivedMessageManager, &ReceivedMessageManager::requestMissingPart, this, &Client::slotRequestMissingPart);
 }
-
-// void Client::notifyServerMessagePartReceived(const QUuid &messageId, const qint32 &partIndex)
-// {
-//     Message message(SystemMessageReceived, messageId, partIndex);
-//     sendByteArray(message);
-// }
 
 
 void Client::slotReadyRead()
@@ -46,11 +37,26 @@ void Client::slotReadyRead()
         QDataStream in(&buffer, QIODevice::ReadOnly);
         Message message;
         in >> message;
-
-        messageManager->processIncomingMessage(message, qMakePair(sender, senderPort));
+        processIncomingMessage(message, qMakePair(sender, senderPort));
     }
 }
 
+void Client::processIncomingMessage(const Message &message, const UserAddres &sender)
+{
+    if (message.getMessageType() == SystemMessageReceived)
+    {
+        sendMessageManager->removeMessage(message.getMessageId());
+        slotMessageReceived(message.getMessageId());
+    }
+    else if (message.getMessageType() == SystemRequestMessagePart)
+    {
+        sendQueue.enqueue(sendMessageManager->getMessage(message.getMessageId(), message.getIndex()));
+    }
+    else
+    {
+        receivedMessageManager->addMessage(message, sender);
+    }
+}
 
 void Client::slotTextMessageComplete(const QUuid &messageId, QByteArray &data)
 {
@@ -88,6 +94,13 @@ void Client::slotNotifyClientMessageReceived(const QUuid &messageId, const UserA
     sendByteArray(notifyMessage, addres);
 }
 
+void Client::slotRequestMissingPart(const QUuid &messageId, quint32 messagePart)
+{
+    Message message(SystemRequestMessagePart, messageId, messagePart);
+    sendByteArray(message, receivedMessageManager->getClient(messageId));
+}
+
+
 void Client::slotSendMessage(const BaseMessageData &messageData, const UserAddres &addres)
 {
     QByteArray data = messageData.getData();
@@ -99,7 +112,7 @@ void Client::slotSendMessage(const BaseMessageData &messageData, const UserAddre
         Message::MessageHeader header(messageData.type(), messageData.getId(), partIndex, totalParts);
         Message message(header, data.mid(partIndex * maxPacketSize, maxPacketSize));
 
-        messageManager->addSentMessagePart(messageData.getId(), partIndex, message, addres);
+        sendMessageManager->addMessage(message, addres);
         sendQueue.enqueue(message);
     }
 }
@@ -117,7 +130,7 @@ void Client::slotSendPackage()
     if (!sendQueue.isEmpty())
     {
         Message message = sendQueue.dequeue();
-        sendByteArray(message, messageManager->getClientAddres(message.getMessageId()));
+        sendByteArray(message, sendMessageManager->getClient(message.getMessageId()));
     }
 }
 
@@ -126,14 +139,3 @@ void Client::slotPortChanged(quint16 port)
     socket->close();
     socket->bind(QHostAddress::LocalHost, port);
 }
-
-// void Client::slotResendPackages()
-// {
-//     for (auto &packages : sentMessage)
-//     {
-//         for (auto &message : packages)
-//         {
-//             sendByteArray(message);
-//         }
-//     }
-// }

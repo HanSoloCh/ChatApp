@@ -1,43 +1,82 @@
 #include "messageManager.h"
 
-
-void MessageManager::processIncomingMessage(const Message &message, const UserAddres &messageSender)
+BaseMessageManager::~BaseMessageManager()
 {
-    messageProcess(message.header, message.messageData, messageSender);
 }
 
-void MessageManager::messageProcess(const Message::MessageHeader &info, const QByteArray &data, const UserAddres &messageSender)
+UserAddres BaseMessageManager::getClient(const QUuid &messageId) const
 {
-    if (info.type == UserMessage || info.type == UserFile)
-    {
-        incommingMessagePart(info, data, messageSender);
-    }
-    else
-        incommingAnswer(info.messageId);
+    return messageClient[messageId];
 }
 
-void MessageManager::incommingMessagePart(const Message::MessageHeader &info, const QByteArray &data, const UserAddres &messageSender)
+void BaseMessageManager::addMessage(const Message &message, const UserAddres &messageSender)
 {
-    if (completeMessage.contains(info.messageId))
+    messageClient[message.header.messageId] = messageSender;
+    messageParts[message.header.messageId][message.header.partIndex] = message;
+}
+
+void BaseMessageManager::removeMessage(const QUuid &messageId)
+{
+    messageClient.remove(messageId);
+    messageParts.remove(messageId);
+}
+
+ReceivedMessageManager::ReceivedMessageManager(QObject *parent): BaseMessageManager(parent)
+{
+    recedTimer = new QTimer(this);
+    connect(recedTimer, &QTimer::timeout, this, &ReceivedMessageManager::slotRequestMissingParts);
+    recedTimer->start(5 * 1000);
+}
+
+void ReceivedMessageManager::addMessage(const Message &message, const UserAddres &messageSender)
+{
+    if (completeMessage.contains(message.getMessageId()))
         return;
 
-    senders[info.messageId] = messageSender;
-    receivedParts[info.messageId][info.partIndex] = data;
-    if (receivedParts[info.messageId].size() == info.totalPartsCount)
+    BaseMessageManager::addMessage(message, messageSender);
+    if (messageParts[message.getMessageId()].size() == message.getTotalPartsCount())
+        messageComplete(message.getMessageId(), message.getMessageType());
+}
+
+void ReceivedMessageManager::slotRequestMissingParts()
+{
+    for (auto it = messageParts.begin(); it != messageParts.end(); ++it)
     {
-        makeCompleteMessage(info.messageId, info.totalPartsCount, info.type);
-        UserAddres sender = getSender(info.messageId);
-        removeMessage(info.messageId);
-        emit notifyClientMessageReceived(info.messageId, sender);
+        quint32 totalParts = getTotalPartsCount(it.key());
+        requestMissingParts(it.key(), totalParts);
     }
 }
 
-void MessageManager::makeCompleteMessage(const QUuid &messageId, qint32 totalParts, MessageType type)
+void ReceivedMessageManager::requestMissingParts(const QUuid &messageId, quint32 totalPartsCount)
+{
+    for (size_t i = 0; i < totalPartsCount; ++i)
+    {
+        if (!messageParts[messageId].contains(i))
+        {
+            emit requestMissingPart(messageId, i);
+        }
+    }
+}
+
+quint32 ReceivedMessageManager::getTotalPartsCount(const QUuid &messageId)
+{
+    return messageParts[messageId].first().getTotalPartsCount();
+}
+
+void ReceivedMessageManager::messageComplete(const QUuid &messageId, MessageType type)
+{
+    makeCompleteMessage(messageId, type);
+    UserAddres sender = getClient(messageId);
+    removeMessage(messageId);
+    emit notifyClientMessageReceived(messageId, sender);
+}
+
+void ReceivedMessageManager::makeCompleteMessage(const QUuid &messageId, MessageType type)
 {
     QByteArray fullMessage;
-    for (qint32 i = 0; i < totalParts; ++i)
+    for (const auto &parts: qAsConst(messageParts[messageId]))
     {
-        fullMessage.append(receivedParts[messageId][i]);
+        fullMessage.append(parts.messageData);
     }
 
     if (type == UserMessage)
@@ -51,32 +90,8 @@ void MessageManager::makeCompleteMessage(const QUuid &messageId, qint32 totalPar
     completeMessage.insert(messageId);
 }
 
-void MessageManager::addSentMessagePart(const QUuid &messageId, const qint32 &messagePart, const Message &message, const UserAddres &addres)
+Message SendMessageManager::getMessage(const QUuid &messageId, quint32 messagePart) const
 {
-    messageAddres[messageId] = addres;
-    messages[messageId][messagePart] = message;
+    return messageParts[messageId][messagePart];
 }
 
-UserAddres MessageManager::getSender(const QUuid &messageId) const
-{
-    return senders[messageId];
-}
-
-UserAddres MessageManager::getClientAddres(const QUuid &messageId) const
-{
-    return messageAddres[messageId];
-}
-
-void MessageManager::incommingAnswer(const QUuid &messageId)
-{
-    removeMessage(messageId);
-    emit messageReceived(messageId);
-}
-
-void MessageManager::removeMessage(const QUuid &messageId)
-{
-    messageAddres.remove(messageId);
-    messages.remove(messageId);
-    receivedParts.remove(messageId);
-    senders.remove(messageId);
-}

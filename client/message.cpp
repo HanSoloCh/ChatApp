@@ -27,12 +27,12 @@ QDataStream &operator>>(QDataStream &in, Message &message)
     return in;
 }
 
-Message::Message(MessageType curType, QUuid id, qint32 index, qint32 count, const QByteArray &data)
+Message::Message(MessageType curType, QUuid id, quint32 index, quint32 count, const QByteArray &data)
     : header(curType, id, index, count), messageData(data){};
 
-Message::Message(MessageType curType, QUuid id) : header(curType, id){};
+Message::Message(MessageType curType, QUuid id, quint32 index) : header(curType, id, index){};
 
 Message::Message(const Message::MessageHeader &head, const QByteArray &data) : header(head), messageData(data){};
 
-Message::MessageHeader::MessageHeader(MessageType curType, QUuid id, qint32 index, qint32 count)
+Message::MessageHeader::MessageHeader(MessageType curType, QUuid id, quint32 index, quint32 count)
     : type(curType), messageId(id), partIndex(index), totalPartsCount(count){};

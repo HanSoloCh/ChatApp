@@ -39,9 +39,9 @@ QString MainWindow::getNickname()
 
 QListWidgetItem *MainWindow::getItemByMessageId(const QUuid messageId) const
 {
-    QListWidgetItem *item;
     for (int i = 0; i < ui->listWidget->count(); ++i)
     {
+        QListWidgetItem *item;
         item = ui->listWidget->item(i);
         if (item->data(Qt::UserRole).toUuid() == messageId)
             return item;
