@@ -7,9 +7,8 @@
 
 #include "message.h"
 
-class BaseMessageData
-{
-  public:
+class BaseMessageData {
+   public:
     BaseMessageData(MessageType type, const QString nick, const QUuid id, int size = 512)
         : messageType(type), messageId(id), nickname(nick), maxSize(size){};
     virtual ~BaseMessageData() = default;
@@ -19,33 +18,33 @@ class BaseMessageData
     int getMaxSize() const { return maxSize; }
     QUuid getId() const { return messageId; }
 
-  protected:
+   protected:
     MessageType messageType;
     QUuid messageId;
     QString nickname;
     int maxSize;
 };
 
-class TextMessageData : public BaseMessageData
-{
-  public:
-    TextMessageData(MessageType type, const QString nick, const QString text, const QUuid id, int size = 512)
+class TextMessageData : public BaseMessageData {
+   public:
+    TextMessageData(MessageType type, const QString nick, const QString text, const QUuid id,
+                    int size = 512)
         : BaseMessageData(type, nick, id, size), messageText(text){};
     virtual QByteArray getData() const override;
 
-  protected:
+   protected:
     QString messageText;
 };
 
-class FileMessageData: public BaseMessageData
-{
-  public:
-    FileMessageData(MessageType type, const QString nick, QFile &conFile, const QUuid id, int size = 512)
+class FileMessageData : public BaseMessageData {
+   public:
+    FileMessageData(MessageType type, const QString nick, QFile& conFile, const QUuid id,
+                    int size = 512)
         : BaseMessageData(type, nick, id, size), file(conFile){};
     virtual QByteArray getData() const override;
 
-  protected:
-    QFile &file;
+   protected:
+    QFile& file;
 };
 
-#endif // MESSAGEDATA_H
+#endif  // MESSAGEDATA_H
